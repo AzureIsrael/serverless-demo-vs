@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "serverless.demo.vs", "serverless.demo.vs\serverless.demo.vs.csproj", "{EDDC0185-94A7-4AEC-B604-E5F05DEF9D6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "serverless.demo.vs", "serverless.demo.vs\serverless.demo.vs.csproj", "{EDDC0185-94A7-4AEC-B604-E5F05DEF9D6E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageResizeWebApp", "ImageResizeWebApp\ImageResizeWebApp\ImageResizeWebApp.csproj", "{699683CB-34CC-4CA7-AB3F-9DD9CD5D8310}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{EDDC0185-94A7-4AEC-B604-E5F05DEF9D6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EDDC0185-94A7-4AEC-B604-E5F05DEF9D6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EDDC0185-94A7-4AEC-B604-E5F05DEF9D6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{699683CB-34CC-4CA7-AB3F-9DD9CD5D8310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{699683CB-34CC-4CA7-AB3F-9DD9CD5D8310}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{699683CB-34CC-4CA7-AB3F-9DD9CD5D8310}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{699683CB-34CC-4CA7-AB3F-9DD9CD5D8310}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

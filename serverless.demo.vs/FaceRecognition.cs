@@ -38,23 +38,25 @@ namespace serverless.demo.vs
             TraceWriter log,
             [DocumentDB("serverlessdemodb", "images", ConnectionStringSetting = "CosmosDBDocConnectionString")] IAsyncCollector<Document> documents)
         {
-            foreach (var modifiedDocument in modifiedDocuments)
+            try
             {
-                log.Info($"loading document [{modifiedDocument.Id}]");
-                Face[] faces = modifiedDocument.GetPropertyValue<Face[]>("faces");
-                if (faces != null)
+                foreach (var modifiedDocument in modifiedDocuments)
                 {
-                    log.Info($"already proccesed document [{modifiedDocument.Id}], skipping...");
-                    return;
-                }
+                    log.Info($"loading document [{modifiedDocument.Id}]");
+                    Face[] faces = modifiedDocument.GetPropertyValue<Face[]>("faces");
+                    if (faces != null)
+                    {
+                        log.Info($"already proccesed document [{modifiedDocument.Id}], skipping...");
+                        return;
+                    }
 
-                CloudBlockBlob blockBlob = Helper.GetBlockBlob(modifiedDocument);
+                    CloudBlockBlob blockBlob = Helper.GetBlockBlob(modifiedDocument);
 
 
-                using (Stream stream = blockBlob.OpenRead())
-                {
-                    FaceServiceClient client = new FaceServiceClient(Environment.GetEnvironmentVariable("CognitiveFaceApiKey"), Environment.GetEnvironmentVariable("CognitiveFaceApiUrl"));
-                    var requiredFaceAttributes = new FaceAttributeType[] {
+                    using (Stream stream = blockBlob.OpenRead())
+                    {
+                        FaceServiceClient client = new FaceServiceClient(Environment.GetEnvironmentVariable("CognitiveFaceApiKey"), Environment.GetEnvironmentVariable("CognitiveFaceApiUrl"));
+                        var requiredFaceAttributes = new FaceAttributeType[] {
                         FaceAttributeType.Age,
                         FaceAttributeType.Gender,
                         FaceAttributeType.Smile,
@@ -62,28 +64,32 @@ namespace serverless.demo.vs
                         FaceAttributeType.HeadPose,
                         FaceAttributeType.Glasses
                     };
-                    try
-                    {
-                        faces = await client.DetectAsync(blockBlob.Uri.AbsoluteUri, true, false, requiredFaceAttributes);
-
-                        if (faces == null || faces.Length == 0)
+                        try
                         {
-                            log.Info($"no faces were detected in image [{blockBlob.Uri.AbsoluteUri}] connected to document [{modifiedDocument.Id}]");
-                            return;
-                        }
+                            faces = await client.DetectAsync(blockBlob.Uri.AbsoluteUri, true, false, requiredFaceAttributes);
 
-                        log.Info($"found {faces.Length} faces were detected in image [{blockBlob.Uri.AbsoluteUri}] updating document [{modifiedDocument.Id}]");
-                        Document document = modifiedDocument;
-                        document.SetPropertyValue("faces", faces);
-                        await documents.AddAsync(document);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("failed detecting faces", ex);
+                            if (faces == null || faces.Length == 0)
+                            {
+                                log.Info($"no faces were detected in image [{blockBlob.Uri.AbsoluteUri}] connected to document [{modifiedDocument.Id}]");
+                                return;
+                            }
+
+                            log.Info($"found {faces.Length} faces were detected in image [{blockBlob.Uri.AbsoluteUri}] updating document [{modifiedDocument.Id}]");
+                            Document document = modifiedDocument;
+                            document.SetPropertyValue("faces", faces);
+                            await documents.AddAsync(document);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error("failed detecting faces", ex);
+                        }
                     }
                 }
             }
-
+            catch (Exception ex)
+            {
+                log.Error("face recognition funciton failed", ex);
+            }
         }       
     }
 }

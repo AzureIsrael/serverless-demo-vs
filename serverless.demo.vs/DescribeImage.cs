@@ -34,24 +34,25 @@ namespace serverless.demo.vs
             TraceWriter log,
             [DocumentDB("serverlessdemodb", "images", ConnectionStringSetting = "CosmosDBDocConnectionString")] IAsyncCollector<Document> documents)
         {
-            foreach (var modifiedDocument in modifiedDocuments)
-            {
-                log.Info($"loading document [{modifiedDocument.Id}]");
-                AnalysisResult analysisResult = modifiedDocument.GetPropertyValue<AnalysisResult>("analysis");
-                if (analysisResult != null)
+            try {
+                foreach (var modifiedDocument in modifiedDocuments)
                 {
-                    log.Info($"already proccesed document [{modifiedDocument.Id}], skipping...");
-                    return;
-                }
+                    log.Info($"loading document [{modifiedDocument.Id}]");
+                    AnalysisResult analysisResult = modifiedDocument.GetPropertyValue<AnalysisResult>("analysis");
+                    if (analysisResult != null)
+                    {
+                        log.Info($"already proccesed document [{modifiedDocument.Id}], skipping...");
+                        return;
+                    }
 
-                CloudBlockBlob blockBlob = Helper.GetBlockBlob(modifiedDocument);
+                    CloudBlockBlob blockBlob = Helper.GetBlockBlob(modifiedDocument);
 
 
-                using (Stream stream = blockBlob.OpenRead())
-                {
+                    using (Stream stream = blockBlob.OpenRead())
+                    {
 
-                    VisionServiceClient client = new VisionServiceClient(Environment.GetEnvironmentVariable("CognitiveVisionApiKey"), Environment.GetEnvironmentVariable("CognitiveVisionApiUrl"));
-                    var requiredVisualFeature = new VisualFeature[] {
+                        VisionServiceClient client = new VisionServiceClient(Environment.GetEnvironmentVariable("CognitiveVisionApiKey"), Environment.GetEnvironmentVariable("CognitiveVisionApiUrl"));
+                        var requiredVisualFeature = new VisualFeature[] {
                         VisualFeature.ImageType,
                         VisualFeature.Color,
                         VisualFeature.Faces,
@@ -61,32 +62,36 @@ namespace serverless.demo.vs
                         VisualFeature.Description
                     };
 
-                    var requiredDetails = new string[] { "Celebrities", "Landmarks" };
-                    try
-                    {
-                        analysisResult = await client.AnalyzeImageAsync(blockBlob.Uri.AbsoluteUri, requiredVisualFeature, requiredDetails);
-
-                        if (analysisResult == null)
+                        var requiredDetails = new string[] { "Celebrities", "Landmarks" };
+                        try
                         {
-                            log.Info($"empty analysis result for [{blockBlob.Uri.AbsoluteUri}] connected to document [{modifiedDocument.Id}]");
-                            return;
+                            analysisResult = await client.AnalyzeImageAsync(blockBlob.Uri.AbsoluteUri, requiredVisualFeature, requiredDetails);
+
+                            if (analysisResult == null)
+                            {
+                                log.Info($"empty analysis result for [{blockBlob.Uri.AbsoluteUri}] connected to document [{modifiedDocument.Id}]");
+                                return;
+                            }
+                            log.Info($"description [{analysisResult.Description?.Captions?[0]?.Text}] for image [{blockBlob.Uri.AbsoluteUri}], updating document [{modifiedDocument.Id}]");
+                            Document document = modifiedDocument;
+                            document.SetPropertyValue("analysis", analysisResult);
+                            await documents.AddAsync(document);
                         }
-                        log.Info($"description [{analysisResult.Description?.Captions?[0]?.Text}] for image [{blockBlob.Uri.AbsoluteUri}], updating document [{modifiedDocument.Id}]");
-                        Document document = modifiedDocument;
-                        document.SetPropertyValue("analysis", analysisResult);
-                        await documents.AddAsync(document);
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error("failed detecting faces", ex);
+                        catch (Exception ex)
+                        {
+                            log.Error("failed analysing image", ex);
+                        }
                     }
                 }
+
+            }
+            catch(Exception ex)
+            {
+                log.Error("descibe image function failed", ex);
             }
 
+
         }
-
-       
-
 
     }
 }
