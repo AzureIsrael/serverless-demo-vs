@@ -79,7 +79,7 @@ namespace ImageResizeWebApp.Helpers
             {
                 //This overload allows control of the page size. You can return all remaining results by passing null for the maxResults parameter,
                 //or by calling a different overload.
-                resultSegment = await container.ListBlobsSegmentedAsync("", true, BlobListingDetails.All, 10, continuationToken, null, null);
+                resultSegment = await container.ListBlobsSegmentedAsync("", true, BlobListingDetails.All, 1000, continuationToken, null, null);
 
                 foreach (var blobItem in resultSegment.Results)
                 {
